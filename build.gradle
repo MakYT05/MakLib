@@ -1,51 +1,49 @@
 plugins {
     id 'eclipse'
     id 'idea'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'  // Версия ForgeGradle
-    id 'maven-publish'  // Плагин для публикации в Maven
+    id 'net.minecraftforge.gradle' version '6.0.0'
+    id 'maven-publish'
 }
 
-group = 'com.mak'  // Замените на уникальное имя
-version = '1.0.0'  // Укажите версию вашей библиотеки
+group = 'com.mak'
+version = '1.0.0'
 base {
-    archivesName = 'maklib'  // Название вашего мода
+    archivesName = 'maklib'
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)  // Java 17 для Minecraft 1.20.1
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
 }
 
 minecraft {
-    // Убедитесь, что версия Minecraft и Forge настроены правильно
-    mappings channel: 'official', version: '1.20.1'  // Переименуйте для вашего случая
+    mappings channel: 'official', version: '1.20.1'
 
-    copyIdeResources = true  // Включаем ресурсы IDE
+    copyIdeResources = true
 }
 
 repositories {
-    mavenCentral()  // Репозиторий Maven Central
-    maven { url 'https://jitpack.io' }  // Репозиторий JitPack (если используете)
+    mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net' }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"  // Зависимость от Forge
-    // Добавьте сюда зависимости других библиотек, если они есть
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 }
 
-// Настройка публикации в Maven
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
 
-            groupId = 'com.mak'  // Ваш groupId
-            artifactId = 'maklib'     // Ваш артефакт
-            version = '1.0.0'         // Версия
+            groupId = 'com.mak'
+            artifactId = 'maklib'
+            version = '1.0.0'
 
             pom {
                 name = 'MakLib'
                 description = 'A library for Minecraft modding'
-                url = 'https://github.com/mak/maklib'  // Укажите ссылку на репозиторий
+                url = 'https://github.com/MakYT05/MakLib'
                 licenses {
                     license {
                         name = 'MIT'
@@ -59,9 +57,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://github.com/mak/maklib.git'
-                    developerConnection = 'scm:git:ssh://github.com/mak/maklib.git'
-                    url = 'https://github.com/mak/maklib'
+                    connection = 'scm:git:git://github.com/MakYT05/MakLib.git'
+                    developerConnection = 'scm:git:ssh://github.com/MakYT05/MakLib.git'
+                    url = 'https://github.com/MakYT05/MakLib'
                 }
             }
         }
@@ -69,7 +67,7 @@ publishing {
     repositories {
         maven {
             name = 'GitHubPackages'
-            url = uri("https://maven.pkg.github.com/mak/maklib")
+            url = uri("https://maven.pkg.github.com/MakYT05/MakLib")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME_GITHUB")
                 password = project.findProperty("gpr.token") ?: System.getenv("TOKEN_GITHUB")
@@ -78,21 +76,17 @@ publishing {
     }
 }
 
-//tasks.named('publishMavenJavaPublicationToMavenRepository').configure {
-//    dependsOn 'build'
-//}
-
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
 tasks.named('processResources', ProcessResources).configure {
-    var replaceProperties = [
+    def replaceProperties = [
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
             forge_version: forge_version, forge_version_range: forge_version_range,
             loader_version_range: loader_version_range,
             mod_id: 'maklib', mod_name: 'MakLib', mod_license: 'MIT', mod_version: version,
-            mod_authors: 'Your Name', mod_description: 'A Minecraft modding library'
+            mod_authors: 'MAK', mod_description: 'A Minecraft modding library'
     ]
 
     inputs.properties replaceProperties
@@ -106,11 +100,11 @@ tasks.named('jar', Jar).configure {
     manifest {
         attributes([
                 "Specification-Title": 'maklib',
-                "Specification-Vendor": 'Your Name',
+                "Specification-Vendor": 'MAK',
                 "Specification-Version": "1",
                 "Implementation-Title": project.name,
                 "Implementation-Version": project.jar.archiveVersion,
-                "Implementation-Vendor": 'Your Name',
+                "Implementation-Vendor": 'MAK',
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }

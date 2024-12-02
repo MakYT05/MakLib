@@ -1,93 +1,90 @@
 package yt.mak.maklib.lib;
 
-import net.minecraft.world.entity.Entity;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
-import yt.mak.maklib.Entity.AstralEntity;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
+import yt.mak.maklib.MakLib;
+import yt.mak.maklib.init.ModContent;
 
 public class ContentRegistry {
 
-    // Реестры для предметов, блоков, сущностей, рецептов
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "maklib");
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "maklib");
-    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, "maklib");
+    // Регистры для каждого типа контента
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MakLib.MODID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MakLib.MODID);
+    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, MakLib.MODID);
 
-    // Регистрируем предметы
-    @Annotation.NameIt("astralcoin") // Аннотация для предмета
-    public static final RegistryObject<Item> ASTRALCOIN = addItem("astralcoin", new Item(new Item.Properties().rarity(Rarity.EPIC)));
+    // Мапы для хранения объектов, которые нужно зарегистрировать
+    private static final Map<String, Item> items = new HashMap<>();
+    private static final Map<String, Block> blocks = new HashMap<>();
+    private static final Map<String, EntityType<?>> entities = new HashMap<>();
 
-    // Регистрируем блоки
-    @Annotation.NameBl("astral_block") // Аннотация для блока
-    public static final RegistryObject<Block> ASTRAL_BLOCK = addBlock("astral_block", new Block(BlockBehaviour.Properties.of()));
-
-    // Регистрируем сущности
-    @Annotation.NameEn("astral_entity") // Аннотация для сущности
-    public static final RegistryObject<EntityType<AstralEntity>> ASTRAL_ENTITY = addEntity("astral_entity", EntityType.Builder.of(AstralEntity::new, MobCategory.MONSTER).sized(0.6F, 1.8F));
-
-    public static RegistryObject<Item> addItem(String name, Item item) { return ITEMS.register(name, () -> item); }
-
-    public static RegistryObject<Block> addBlock(String name, Block block) { return BLOCKS.register(name, () -> block); }
-
-    public static <T extends Entity> RegistryObject<EntityType<T>> addEntity(String name, EntityType.Builder<T> builder) {
-        return ENTITIES.register(name, () -> builder.build(name));
+    // Статический блок для автоматической регистрации
+    static {
+        registerAnnotatedContent();
     }
 
+    // Метод для регистрации аннотированных полей
     public static void registerAnnotatedContent() {
-        // Регистрация предметов
-        for (Field field : ContentRegistry.class.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Annotation.NameIt.class)) {
-                try {
-                    field.setAccessible(true);
+        try {
+            // Получаем все поля класса ModContent
+            Field[] fields = ModContent.class.getDeclaredFields();
 
-                    RegistryObject<Item> item = (RegistryObject<Item>) field.get(null);
-                    String name = field.getAnnotation(Annotation.NameIt.class).value();
-
-                    ITEMS.register(name, () -> item.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(Annotation.NameIt.class)) {
+                    // Регистрация предмета
+                    String itemName = field.getAnnotation(Annotation.NameIt.class).value();
+                    // Добавляем предмет в список для регистрации
+                    items.put(itemName, (Item) field.get(null));
+                } else if (field.isAnnotationPresent(Annotation.NameBl.class)) {
+                    // Регистрация блока
+                    String blockName = field.getAnnotation(Annotation.NameBl.class).value();
+                    // Добавляем блок в список для регистрации
+                    blocks.put(blockName, (Block) field.get(null));
+                } else if (field.isAnnotationPresent(Annotation.NameEn.class)) {
+                    // Регистрация сущности
+                    String entityName = field.getAnnotation(Annotation.NameEn.class).value();
+                    // Добавляем сущность в список для регистрации
+                    entities.put(entityName, (EntityType<?>) field.get(null));
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static void register(IEventBus eventBus) {
+        // Регистрация предметов
+        for (Map.Entry<String, Item> entry : items.entrySet()) {
+            String name = entry.getKey();
+            Item item = entry.getValue();
+            ITEMS.register(name, () -> item);
         }
 
         // Регистрация блоков
-        for (Field field : ContentRegistry.class.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Annotation.NameBl.class)) {
-                try {
-                    field.setAccessible(true);
-
-                    RegistryObject<Block> block = (RegistryObject<Block>) field.get(null);
-                    String name = field.getAnnotation(Annotation.NameBl.class).value();
-
-                    BLOCKS.register(name, () -> block.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+        for (Map.Entry<String, Block> entry : blocks.entrySet()) {
+            String name = entry.getKey();
+            Block block = entry.getValue();
+            BLOCKS.register(name, () -> block);
         }
 
         // Регистрация сущностей
-        for (Field field : ContentRegistry.class.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Annotation.NameEn.class)) {
-                try {
-                    field.setAccessible(true);
-
-                    RegistryObject<EntityType<?>> entity = (RegistryObject<EntityType<?>>) field.get(null);
-                    String name = field.getAnnotation(Annotation.NameEn.class).value();
-
-                    ENTITIES.register(name, () -> entity.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+        for (Map.Entry<String, EntityType<?>> entry : entities.entrySet()) {
+            String name = entry.getKey();
+            EntityType<?> entity = entry.getValue();
+            ENTITIES.register(name, () -> entity);
         }
+
+        // Регистрация в eventBus
+        ITEMS.register(eventBus);
+        BLOCKS.register(eventBus);
+        ENTITIES.register(eventBus);
     }
 }
