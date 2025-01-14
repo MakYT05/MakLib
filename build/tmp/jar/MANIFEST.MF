@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Specification-Title: maklib
+Specification-Vendor: 
+Specification-Version: 1
+Implementation-Title: MakLib
+Implementation-Version: yt.mak
+Implementation-Vendor: 
+Implementation-Timestamp: 2025-01-14T11:59:17+0300
+
